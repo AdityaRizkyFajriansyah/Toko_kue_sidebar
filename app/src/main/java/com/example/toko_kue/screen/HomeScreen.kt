@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import androidx.room.util.TableInfo
 import kotlinx.coroutines.launch
 import com.example.toko_kue.data.model.Produk
@@ -24,6 +26,7 @@ import com.example.toko_kue.viewmodel.ProdukViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    navController: NavController,
     bahanViewModel: BahanViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     produkViewModel: ProdukViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onNavigateToDaftarBahan: () -> Unit = {}
@@ -205,7 +208,11 @@ fun HomeScreen(
         InputProdukDialog(
             bahanViewModel = bahanViewModel,
             produkViewModel = produkViewModel,
-            onDismiss = { showInputProduk = false}
+            onDismiss = { showInputProduk = false},
+            onNavigateToInputProdukScreen = {
+                showInputProduk = false
+                navController.navigate("inputProduk")
+            }
         )
     }
 
@@ -281,7 +288,8 @@ fun InputBahanDialog(
 fun InputProdukDialog(
     onDismiss: () -> Unit,
     bahanViewModel: BahanViewModel,
-    produkViewModel: ProdukViewModel
+    produkViewModel: ProdukViewModel,
+    onNavigateToInputProdukScreen: () -> Unit
 ){
     var namaProduk by remember { mutableStateOf("")}
     var hargaJual by remember { mutableStateOf("")}
@@ -326,6 +334,7 @@ fun InputProdukDialog(
 
                 Button(
                     onClick = {
+                        // kurangi stok bahan(jaga jaga)
                         bahanViewModel.kurangiBahan(
                             namaBahan,
                             jumlahBahan.toDoubleOrNull()?: 0.0
@@ -342,7 +351,7 @@ fun InputProdukDialog(
 
                         produkViewModel.tambahProduk(produk)
 
-                        onDismiss()
+                        onNavigateToInputProdukScreen()
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
