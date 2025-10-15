@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.room.util.TableInfo
 import kotlinx.coroutines.launch
 import com.example.toko_kue.data.model.Produk
 import com.example.toko_kue.viewmodel.BahanViewModel

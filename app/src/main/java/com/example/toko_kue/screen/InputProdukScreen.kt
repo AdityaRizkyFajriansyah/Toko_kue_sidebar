@@ -4,16 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusModifier
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.toko_kue.data.model.Bahan
 import com.example.toko_kue.data.model.Produk
 import com.example.toko_kue.viewmodel.BahanViewModel
 import com.example.toko_kue.viewmodel.ProdukViewModel
@@ -36,7 +36,7 @@ fun InputProdukScreen(
     var jumlahDigunakan by remember { mutableStateOf("") }
 
     // 🔹 Daftar bahan dari ViewModel
-    val bahanList = bahanViewModel.bahanList
+    val bahanList = bahanViewModel.bahanList.collectAsState().value
 
     // 🔹 List bahan yang dipakai oleh produk ini
     var bahanDipakai by remember { mutableStateOf(mutableListOf<Pair<String, Double>>()) }
@@ -50,7 +50,7 @@ fun InputProdukScreen(
                 title = { Text("Input Produk ambil bahan") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                 }
             )
@@ -72,7 +72,7 @@ fun InputProdukScreen(
                 Text("Jumlah Jadi: ${it.jumlahJadi} pcs")
             } ?: Text("Belum ada produk disimpan sebelumnya")
 
-            Divider(color = Color.Gray, thickness = 1.dp)
+            HorizontalDivider(thickness = 1.dp, color = Color.Gray)
 
             // ✅ Dropdown bahan baku
             ExposedDropdownMenuBox(
@@ -84,7 +84,8 @@ fun InputProdukScreen(
                     onValueChange = {},
                     label = { Text("Pilih Bahan Baku") },
                     readOnly = true,
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                 )
 
                 ExposedDropdownMenu(

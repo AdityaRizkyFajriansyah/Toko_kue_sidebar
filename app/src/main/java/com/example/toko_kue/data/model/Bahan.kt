@@ -1,8 +1,19 @@
 package com.example.toko_kue.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class Bahan(
-    val id: Int,
+    val id: String? = null,
     val nama: String,
-    val stok: Double, // menggunakan gram, ml
-    val harga: Double // harga satuan misalnya per kg
+
+    @SerializedName("jumlah")
+    val jumlah: Double,
+
+    val harga: Double,
+
+    @SerializedName("sisaBahan")
+    val sisaBahan: Double? = null,
+
+    @SerializedName("hargaDetail")
+    val hargaDetail: Double? = null
 )
