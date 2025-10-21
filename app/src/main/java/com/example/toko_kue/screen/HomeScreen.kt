@@ -1,26 +1,31 @@
 package com.example.toko_kue.screen
 
+import android.app.Dialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
 import com.example.toko_kue.data.model.Produk
 import com.example.toko_kue.viewmodel.BahanViewModel
 import com.example.toko_kue.viewmodel.ProdukViewModel
+import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.text.NumberFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,32 +33,30 @@ fun HomeScreen(
     navController: NavController,
     bahanViewModel: BahanViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     produkViewModel: ProdukViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onNavigateToDaftarBahan: () -> Unit = {}
+    onNavigateToDaftarBahan: () -> Unit = {},
+    onNavigateToInputProdukScreen: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val formatter = NumberFormat.getNumberInstance(Locale("in", "ID"))
 
+    var showInputBahan by remember { mutableStateOf(false)}
     var showSheet by remember { mutableStateOf(false) }
+    var produkEdit by remember { mutableStateOf<Produk?>(null) }
 
-    // variabel untuk show pop up input bahan dan input produk
-    var showInputBahan by remember { mutableStateOf(false) }
-    var showInputProduk by remember { mutableStateOf(false)}
 
-    // variabel untuk daft
-    var daftarbahan by remember { mutableStateOf(false)}
-
-    // List produk dinamis
-    var produkList by remember { mutableStateOf(listOf<Produk>()) }
-    var produkEdit by remember { mutableStateOf<Produk?>(null)}
+    // ✅ Ambil data produk dari backend lewat ViewModel
+    val produkList by produkViewModel.produkList.collectAsState()
+    LaunchedEffect(Unit) {
+        produkViewModel.fetchProduk()
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
                 Spacer(Modifier.height(16.dp))
-
-                // Tombol untuk buka popup Input Bahan
                 Button(
                     onClick = {
                         onNavigateToDaftarBahan()
@@ -62,23 +65,19 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                ) {
-                    Text("Bahan")
-                }
+                ) { Text("Bahan") }
 
                 Spacer(Modifier.height(8.dp))
 
                 Button(
                     onClick = {
-                        showInputProduk = true
+                        onNavigateToInputProdukScreen()
                         scope.launch { drawerState.close() }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                ) {
-                    Text("Produk")
-                }
+                ) { Text("Input Produk") }
             }
         }
     ) {
@@ -113,42 +112,52 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                // ambil dari Produk View Model
-                produkViewModel.produkList.forEach { produk->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ){
-                        Row(
+                if (produkList.isEmpty()) {
+                    Text(
+                        "Belum ada data produk.",
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        color = Color.DarkGray
+                    )
+                } else {
+                    produkList.forEach { produk ->
+                        Card(
                             modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ){
-                            Column{
-                                Text(
-                                    text = produk.nama,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    text = "Harga: Rp.${produk.hargaJual}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Gray
-                                )
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = produk.nama,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color.Black
+                                    )
+                                    Text(
+                                        text = "Harga: Rp${formatter.format(produk.harga ?: BigDecimal.ZERO)}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.DarkGray
+                                    )
+                                    Text(
+                                        text = "Jumlah: ${formatter.format(produk.jumlah ?: BigDecimal.ZERO)} pcs",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.DarkGray
+                                    )
+                                }
 
-                                Row{
-                                    IconButton(onClick = {
-                                        // TODO: Edit Produk
-                                    }) {
+                                Row {
+                                    IconButton(onClick = { produkEdit = produk }) {
                                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                                     }
                                     IconButton(onClick = {
-                                        //TODO: hapus produk
+                                        // TODO: tambahkan fungsi hapus produk dari backend
                                     }) {
                                         Icon(Icons.Default.Delete, contentDescription = "Hapus")
                                     }
@@ -161,7 +170,6 @@ fun HomeScreen(
         }
     }
 
-    // Popup merah
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSheet = false },
@@ -175,54 +183,54 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Button(
-                    onClick = { showInputBahan = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-                ) {
-                    Text("Input Bahan", color = Color.Black)
-                }
-                Button(
-                    onClick = { showInputProduk = true },
+                    onClick = {
+                        onNavigateToInputProdukScreen()
+                        showSheet = false
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                 ) {
                     Text("Input Produk", color = Color.Black)
                 }
+
+                Button(
+                    onClick = {
+                        showSheet = false
+                        showInputBahan = true
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ){
+                    Text("Input Bahan", color = Color.Black)
+                }
             }
         }
     }
-    
-    // Popup Input Bahan
+
     if (showInputBahan) {
         InputBahanDialog(
             onDismiss = { showInputBahan = false },
             onSave = { nama, jumlah, harga ->
-                println("Bahan: $nama, Jumlah: $jumlah, Harga: $harga")
+                bahanViewModel.tambahBahan(
+                    nama = nama,
+                    jumlah = jumlah,
+                    harga = harga
+                )
+                showInputBahan = false
             }
         )
     }
 
-    // pop up untuk input produk
-    if(showInputProduk){
-        InputProdukDialog(
-            bahanViewModel = bahanViewModel,
-            produkViewModel = produkViewModel,
-            onDismiss = { showInputProduk = false},
-            onNavigateToInputProdukScreen = {
-                showInputProduk = false
-                navController.navigate("inputProduk")
-            }
-        )
-    }
-
-    // popup edit produk
-    if(produkEdit != null){
+    if (produkEdit != null) {
         EditProdukDialog(
             produk = produkEdit!!,
             onDismiss = { produkEdit = null },
-            onSave = { updatedProduk ->
-                produkList = produkList.map {
-                    if(it.id == updatedProduk.id) updatedProduk else it
+            onSave = { updated ->
+                // Contoh update lokal (kalau mau update ke backend, tambahkan fungsi PUT di ApiService)
+                produkViewModel.produkList.value.toMutableList().apply {
+                    removeIf { it.id == updated.id }
+                    add(updated)
+                    produkViewModel.fetchProduk() // refresh dari backend
                 }
                 produkEdit = null
             }
@@ -233,11 +241,72 @@ fun HomeScreen(
 @Composable
 fun InputBahanDialog(
     onDismiss: () -> Unit,
-    onSave: (String, String, String) -> Unit
+    onSave: (String, BigDecimal, BigDecimal) -> Unit
+){
+    var nama by remember { mutableStateOf("")}
+    var jumlah by remember { mutableStateOf("")}
+    var harga by remember { mutableStateOf("")}
+
+    Dialog(onDismissRequest = onDismiss){
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = Color.White,
+            tonalElevation = 6.dp
+        ){
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                Text("Input Bahan Baru", style = MaterialTheme.typography.titleMedium)
+                OutlinedTextField(value = nama, onValueChange = {nama = it}, label = { Text("Nama Bahan")})
+                OutlinedTextField(value = jumlah, onValueChange = { jumlah = it}, label = { Text(("Jumlah (dr/ml)"))})
+                OutlinedTextField(value = harga, onValueChange = { harga = it }, label = { Text("Harga Total")})
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Batal", color = Color.Gray)
+                    }
+
+                    Button(onClick = {
+                        if(nama.isNotEmpty() && jumlah.isNotEmpty() && harga.isNotEmpty()){
+                            onSave(
+                                nama, jumlah.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                                harga.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                            )
+                        }
+                    }){
+                        Text("Simpan")
+                    }
+                }
+            }
+
+            Column (
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+
+            }
+        }
+
+    }
+}
+
+@Composable
+fun EditProdukDialog(
+    produk: Produk,
+    onDismiss: () -> Unit,
+    onSave: (Produk) -> Unit
 ) {
-    var nama by remember { mutableStateOf("") }
-    var jumlah by remember { mutableStateOf("") }
-    var harga by remember { mutableStateOf("") }
+    var nama by remember { mutableStateOf(produk.nama) }
+    var hargaText by remember { mutableStateOf(produk.harga?.toPlainString() ?: "0") }
+    var jumlahText by remember { mutableStateOf(produk.jumlah?.toPlainString() ?: "0") }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -253,146 +322,35 @@ fun InputBahanDialog(
                 OutlinedTextField(
                     value = nama,
                     onValueChange = { nama = it },
-                    label = { Text("Nama Bahan") },
+                    label = { Text("Nama Produk") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
-                    value = jumlah,
-                    onValueChange = { jumlah = it },
+                    value = hargaText,
+                    onValueChange = { hargaText = it },
+                    label = { Text("Harga per pcs") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = jumlahText,
+                    onValueChange = { jumlahText = it },
                     label = { Text("Jumlah") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = harga,
-                    onValueChange = { harga = it },
-                    label = { Text("Harga") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+
                 Button(
                     onClick = {
-                        onSave(nama, jumlah, harga)
-                        onDismiss()
+                        onSave(
+                            produk.copy(
+                                nama = nama,
+                                harga = hargaText.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                                jumlah = jumlahText.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                            )
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
-                    Text("Simpan", color = Color.White)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun InputProdukDialog(
-    onDismiss: () -> Unit,
-    bahanViewModel: BahanViewModel,
-    produkViewModel: ProdukViewModel,
-    onNavigateToInputProdukScreen: () -> Unit
-){
-    var namaProduk by remember { mutableStateOf("")}
-    var hargaJual by remember { mutableStateOf("")}
-    var jumlahJadi by remember { mutableStateOf("")}
-
-    // variable input bahan yang dipakai
-    var namaBahan by remember { mutableStateOf("")}
-    var jumlahBahan by remember { mutableStateOf("")}
-
-    Dialog(onDismissRequest = onDismiss){
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = Color(0xFFE0E0E0),
-            tonalElevation = 6.dp
-        ){
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ){
-                OutlinedTextField(
-                    value = namaProduk,
-                    onValueChange = { namaProduk = it},
-                    label = { Text("Input produk apa?")},
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = hargaJual,
-                    onValueChange = { hargaJual = it},
-                    label = { Text("Harga Jual per Pcs")},
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = jumlahJadi,
-                    onValueChange = { jumlahJadi = it},
-                    label = { Text("Jumlah Jadi")},
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Button(
-                    onClick = {
-                        // kurangi stok bahan(jaga jaga)
-                        bahanViewModel.kurangiBahan(
-                            namaBahan,
-                            jumlahBahan.toDoubleOrNull()?: 0.0
-                        )
-
-                        // Simpan produk
-                        val produk = Produk(
-                            id = produkViewModel.produkList.size + 1,
-                            nama = namaProduk,
-                            hargaJual = hargaJual.toDoubleOrNull()?: 0.0,
-                            jumlahJadi = jumlahJadi.toIntOrNull()?: 0,
-                            bahanDipakai = listOf(namaBahan to (jumlahBahan.toDoubleOrNull()?: 0.0))
-                        )
-
-                        produkViewModel.tambahProduk(produk)
-
-                        onNavigateToInputProdukScreen()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                ){
-                    Text("Simpan", color = Color.White)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun EditProdukDialog(
-    produk: Produk,
-    onDismiss: () -> Unit,
-    onSave: (Produk) -> Unit
-) {
-    var nama by remember { mutableStateOf(produk.nama)}
-
-    Dialog(onDismissRequest = onDismiss){
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = Color(0xFFE0E0E0)
-        ){
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ){
-                OutlinedTextField(
-                    value = nama,
-                    onValueChange = { nama = it},
-                    label = { Text("Nama Produk") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Button(
-                    onClick = { onSave(produk.copy(nama = nama)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                ){
                     Text("Simpan", color = Color.White)
                 }
             }

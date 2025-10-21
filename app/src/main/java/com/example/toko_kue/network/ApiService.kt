@@ -7,10 +7,10 @@ import retrofit2.http.*
 interface ApiService {
 
     // ===== BAHAN =====
-    @GET("bahanBaku")
+    @GET("/bahanBaku")
     suspend fun getAllBahan(): List<Bahan>
 
-    @POST("bahanBaku/tambah-stok")
+    @POST("bahanBaku/stok-baru")
     suspend fun addBahan(@Body bahan: Bahan): Bahan
 
     @DELETE("bahanBaku/{id}")
@@ -28,4 +28,13 @@ interface ApiService {
 
     @POST("produk")
     suspend fun addProduk(@Body produk: Produk): Produk
+
+    @DELETE("/produk/{id}")
+    suspend fun deleteProduk(@Path("id") id: String)
+
+    @PUT("Produk/{id}")
+    suspend fun updateProduk(
+        @Path("id") id: String,
+        @Body produk: Produk
+    ): Produk
 }

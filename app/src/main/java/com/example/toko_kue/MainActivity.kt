@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
 
                     composable("daftarBahan"){
                         DaftarBahanScreen(
+                            bahanViewModel = bahanViewModel,
                             onBack = {navController.popBackStack()}
                         )
                     }
@@ -47,10 +48,7 @@ class MainActivity : ComponentActivity() {
                     composable("inputProduk"){
                         InputProdukScreen(
                             navController = navController,
-                            bahanViewModel = bahanViewModel,
-                            produkViewModel = produkViewModel,
-                            onBack = { navController.popBackStack()},
-                            onSelesai = { navController.navigate("home")}
+                            produkViewModel = produkViewModel
                         )
                     }
                 }

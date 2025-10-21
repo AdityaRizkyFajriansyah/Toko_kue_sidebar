@@ -1,15 +1,16 @@
 package com.example.toko_kue.data.model
 
 import com.google.gson.annotations.SerializedName
+import java.math.BigDecimal
 
 data class Bahan(
     val id: String? = null,
     val nama: String,
 
     @SerializedName("jumlah")
-    val jumlah: Double,
+    val jumlah: BigDecimal,
 
-    val harga: Double,
+    val harga: BigDecimal,
 
     @SerializedName("sisaBahan")
     val sisaBahan: Double? = null,

@@ -1,206 +1,124 @@
 package com.example.toko_kue.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusModifier
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.toko_kue.data.model.Produk
-import com.example.toko_kue.viewmodel.BahanViewModel
 import com.example.toko_kue.viewmodel.ProdukViewModel
+import java.math.BigDecimal
+import kotlin.collections.lastIndex
+import kotlin.collections.lastOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputProdukScreen(
     navController: NavController,
-    bahanViewModel: BahanViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     produkViewModel: ProdukViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onBack: () -> Unit,
-    onSelesai: () -> Unit
 ) {
-    // 🔹 Ambil produk terakhir (yang sudah diinput di popup sebelumnya)
-    val produkTerakhir = produkViewModel.produkList.lastOrNull()
-
-    // 🔹 State untuk dropdown dan input bahan
-    var expanded by remember { mutableStateOf(false) }
-    var selectedBahan by remember { mutableStateOf("") }
-    var jumlahDigunakan by remember { mutableStateOf("") }
-
-    // 🔹 Daftar bahan dari ViewModel
-    val bahanList = bahanViewModel.bahanList.collectAsState().value
-
-    // 🔹 List bahan yang dipakai oleh produk ini
-    var bahanDipakai by remember { mutableStateOf(mutableListOf<Pair<String, Double>>()) }
-
-    // 🔹 State laba
-    var laba by remember { mutableStateOf<Double?>(null) }
+    var nama by remember { mutableStateOf("") }
+    var jumlah by remember { mutableStateOf("") }
+    var harga by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Input Produk ambil bahan") },
+                title = { Text("Input Produk Baru") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    if (nama.isNotEmpty() && jumlah.isNotEmpty() && harga.isNotEmpty()) {
+                        val produkBaru = Produk(
+                            id = null,
+                            nama = nama,
+                            jumlah = jumlah.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                            harga = harga.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                        )
+
+                        produkViewModel.tambahProduk(produkBaru)
+
+                        // Reset form setelah input
+                        nama = ""
+                        jumlah = ""
+                        harga = ""
+                    }
+                },
+                containerColor = Color(0xFF00796B)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Tambah Produk", tint = Color.White)
+            }
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(Color(0xFFB2DFDB))
-                .padding(16.dp),
+                .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ✅ Info produk yang sudah diinput sebelumnya
-            produkTerakhir?.let {
-                Text("Nama Produk: ${it.nama}", style = MaterialTheme.typography.titleLarge)
-                Text("Harga Jual per pcs: Rp${it.hargaJual}")
-                Text("Jumlah Jadi: ${it.jumlahJadi} pcs")
-            } ?: Text("Belum ada produk disimpan sebelumnya")
-
-            HorizontalDivider(thickness = 1.dp, color = Color.Gray)
-
-            // ✅ Dropdown bahan baku
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedBahan,
-                    onValueChange = {},
-                    label = { Text("Pilih Bahan Baku") },
-                    readOnly = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
+            Text(
+                "Tambah Produk",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
                 )
+            )
 
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    bahanList.forEach { bahan ->
-                        DropdownMenuItem(
-                            text = { Text(bahan.nama) },
-                            onClick = {
-                                selectedBahan = bahan.nama
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            // ✅ Input jumlah bahan yang digunakan
             OutlinedTextField(
-                value = jumlahDigunakan,
-                onValueChange = { jumlahDigunakan = it },
-                label = { Text("Jumlah bahan digunakan (gram/ml)") },
+                value = nama,
+                onValueChange = { nama = it },
+                label = { Text("Nama Produk") },
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // ✅ Tombol simpan bahan
+            OutlinedTextField(
+                value = jumlah,
+                onValueChange = { jumlah = it },
+                label = { Text("Jumlah") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = harga,
+                onValueChange = { harga = it },
+                label = { Text("Harga per pcs") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Button(
                 onClick = {
-                    if (selectedBahan.isNotEmpty() && jumlahDigunakan.isNotEmpty()) {
-                        val jumlah = jumlahDigunakan.toDoubleOrNull() ?: 0.0
-                        bahanViewModel.kurangiBahan(selectedBahan, jumlah)
-                        bahanDipakai.add(selectedBahan to jumlah)
-                        jumlahDigunakan = ""
+                    if (nama.isNotEmpty() && jumlah.isNotEmpty() && harga.isNotEmpty()) {
+                        val produkBaru = Produk(
+                            id = null,
+                            nama = nama,
+                            jumlah = jumlah.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                            harga = harga.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                        )
+                        produkViewModel.tambahProduk(produkBaru)
+                        navController.popBackStack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
             ) {
-                Text("Simpan Bahan", color = Color.White)
-            }
-
-            // ✅ Tampilkan bahan yang digunakan
-            if (bahanDipakai.isNotEmpty()) {
-                Text("Bahan digunakan:", style = MaterialTheme.typography.titleMedium)
-                LazyColumn {
-                    items(bahanDipakai.size) { index ->
-                        val (nama, jumlah) = bahanDipakai[index]
-                        Text("- $nama : $jumlah")
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ){
-                // ✅ Tombol hitung laba
-                Button(
-                    onClick = {
-                        if (produkTerakhir != null) {
-                            val totalModal = bahanDipakai.sumOf { (nama, jumlah) ->
-                                val bahan = bahanList.find { it.nama == nama }
-                                val hargaSatuan = bahan?.harga ?: 0.0
-                                (jumlah / 1000.0) * hargaSatuan // konversi gram → kg
-                            }
-                            val omzet = produkTerakhir.hargaJual * produkTerakhir.jumlahJadi
-                            laba = omzet - totalModal
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009688))
-                ) {
-                    Text("Hitung Laba", color = Color.White)
-                }
-
-                Button(
-                    onClick = { navController.popBackStack() }, // balik ke HomeScreen
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4))
-                ) {
-                    Text("Home", color = Color.White)
-                }
-            }
-
-
-
-            // ✅ Tampilkan hasil laba
-            laba?.let {
-                Text(
-                    "Laba bersih: Rp${"%.0f".format(it)}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (it >= 0) Color(0xFF2E7D32) else Color.Red
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ✅ Selesai → kembali ke HomeScreen
-            Button(
-                onClick = {
-                    // Update produk terakhir dengan bahan dan laba
-                    val produk = produkTerakhir?.copy(bahanDipakai = bahanDipakai.toList())
-                    if (produk != null) {
-                        produkViewModel.produkList.removeAt(produkViewModel.produkList.lastIndex)
-                        produkViewModel.tambahProduk(produk)
-                    }
-                    onSelesai()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B))
-            ) {
-                Text("Selesai", color = Color.White)
+                Text("Simpan Produk", color = Color.White)
             }
         }
     }

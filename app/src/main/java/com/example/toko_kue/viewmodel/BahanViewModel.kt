@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
+import java.math.BigDecimal
 
 class BahanViewModel : ViewModel() {
 
@@ -18,20 +19,28 @@ class BahanViewModel : ViewModel() {
 
     fun fetchBahan() {
         viewModelScope.launch {
+            Log.d("BahanViewModel", "🔹 Memulai fetch bahan...")
             try {
                 val data = api.getAllBahan()
+                Log.d("BahanViewModel", "✅ Berhasil ambil ${data.size} data dari server")
                 _bahanList.value = data
-                Log.d("BahanViewModel", "Fetch sukses: ${data.size} item")
             } catch (e: Exception) {
-                Log.e("BahanViewModel", "Error fetch bahan: ${e.message}")
+                Log.e("BahanViewModel", "❌ Gagal ambil bahan: ${e.message}", e)
             }
         }
     }
 
-    fun tambahBahan(bahan: Bahan) {
+
+    fun tambahBahan(nama: String, jumlah: BigDecimal, harga: BigDecimal) {
         viewModelScope.launch {
             try {
-                api.addBahan(bahan)
+                val bahan = Bahan(
+                    id = null,
+                    nama = nama,
+                    jumlah = jumlah,
+                    harga = harga
+                )
+                RetrofitClient.api.addBahan(bahan)
                 fetchBahan()
             } catch (e: Exception) {
                 Log.e("BahanViewModel", "Error tambah bahan: ${e.message}")
@@ -61,7 +70,7 @@ class BahanViewModel : ViewModel() {
         }
     }
 
-    fun kurangiBahan(namaBahan: String, jumlahDikurangi: Double) {
+    fun kurangiBahan(namaBahan: String, jumlahDikurangi: BigDecimal) {
         viewModelScope.launch {
             try {
                 val bahan = _bahanList.value.find { it.nama == namaBahan }
