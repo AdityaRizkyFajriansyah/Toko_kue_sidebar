@@ -21,7 +21,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.toko_kue.data.model.Produk
 import com.example.toko_kue.viewmodel.BahanViewModel
-import com.example.toko_kue.viewmodel.ProdukViewModel
+import com.example.toko_kue.viewmodel.produkViewModel
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.text.NumberFormat
@@ -32,7 +32,7 @@ import java.util.*
 fun HomeScreen(
     navController: NavController,
     bahanViewModel: BahanViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    produkViewModel: ProdukViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    produkViewModel: produkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onNavigateToDaftarBahan: () -> Unit = {},
     onNavigateToInputProdukScreen: () -> Unit = {}
 ) {
@@ -59,8 +59,10 @@ fun HomeScreen(
                 Spacer(Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        onNavigateToDaftarBahan()
-                        scope.launch { drawerState.close() }
+                        scope.launch {
+                            drawerState.close()
+                            onNavigateToDaftarBahan()
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -71,8 +73,11 @@ fun HomeScreen(
 
                 Button(
                     onClick = {
-                        onNavigateToInputProdukScreen()
-                        scope.launch { drawerState.close() }
+                        scope.launch {
+                            drawerState.close()
+                            kotlinx.coroutines.delay(250)
+                            onNavigateToInputProdukScreen()
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -157,9 +162,13 @@ fun HomeScreen(
                                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                                     }
                                     IconButton(onClick = {
-                                        // TODO: tambahkan fungsi hapus produk dari backend
+                                        produk.id?.let { produkViewModel.hapusProduk(it) }
                                     }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Hapus")
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Hapus",
+                                            tint = Color.Black
+                                        )
                                     }
                                 }
                             }
@@ -205,6 +214,7 @@ fun HomeScreen(
                 }
             }
         }
+
     }
 
     if (showInputBahan) {

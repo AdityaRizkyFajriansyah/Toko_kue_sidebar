@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
@@ -17,9 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import com.example.toko_kue.viewmodel.BahanViewModel
 import com.example.toko_kue.data.model.Bahan
-import java.math.BigDecimal
+import com.example.toko_kue.screen.InputBahanDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,50 +41,23 @@ fun DaftarBahanScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedBahan by remember { mutableStateOf<Bahan?>(null) }
 
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
+    var showInputBahan by remember { mutableStateOf(false)}
 
-    // Handle tombol back HP
-    BackHandler { onBack() }
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text(
-                    "Side Menu",
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                HorizontalDivider()
-                Text(
-                    "Home",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .clickable {
-                            scope.launch { drawerState.close() }
-                            onBack()
-                        }
-                )
-            }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Daftar Bahan Baku") },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Daftar Bahan Baku") },
+                navigationIcon = {
+                    IconButton(onClick = { onBack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
                     }
-                )
+                }
+            )
             },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = {
-                        // TODO: Tambahkan dialog tambah bahan di sini nanti
+                        showInputBahan = true
                     },
                     containerColor = Color(0xFF00796B)
                 ) {
@@ -162,6 +137,18 @@ fun DaftarBahanScreen(
                 }
             }
         }
+    if (showInputBahan) {
+        InputBahanDialog(
+            onDismiss = { showInputBahan = false },
+            onSave = { nama, jumlah, harga ->
+                bahanViewModel.tambahBahan(
+                    nama = nama,
+                    jumlah = jumlah,
+                    harga = harga
+                )
+                showInputBahan = false
+            }
+        )
     }
 
     // Dialog edit bahan
@@ -175,6 +162,8 @@ fun DaftarBahanScreen(
             }
         )
     }
+
+    BackHandler { onBack() }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

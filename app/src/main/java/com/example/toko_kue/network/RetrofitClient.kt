@@ -6,7 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "http://10.77.84.103:8080/"
+    private const val BASE_URL = "http://10.49.224.103:8080/"
 
     // Logger untuk debugging Retrofit
     private val logging = HttpLoggingInterceptor().apply {

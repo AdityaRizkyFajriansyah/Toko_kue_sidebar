@@ -70,18 +70,4 @@ class BahanViewModel : ViewModel() {
         }
     }
 
-    fun kurangiBahan(namaBahan: String, jumlahDikurangi: BigDecimal) {
-        viewModelScope.launch {
-            try {
-                val bahan = _bahanList.value.find { it.nama == namaBahan }
-                if (bahan != null) {
-                    val bahanBaru = bahan.copy(jumlah = bahan.jumlah - jumlahDikurangi)
-                    api.updateBahan(bahan.id!!, bahanBaru)
-                    fetchBahan()
-                }
-            } catch (e: Exception) {
-                Log.e("BahanViewModel", "Error kurangi bahan: ${e.message}")
-            }
-        }
-    }
 }

@@ -66,4 +66,5 @@ dependencies {
     // ViewModel + Coroutine
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation(libs.androidx.compose.foundation)
 }

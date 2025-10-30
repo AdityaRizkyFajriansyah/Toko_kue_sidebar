@@ -1,7 +1,11 @@
 package com.example.toko_kue.network
 
 import com.example.toko_kue.data.model.Bahan
+import com.example.toko_kue.data.model.BahanPakaiRequest
 import com.example.toko_kue.data.model.Produk
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.ResponseBody
 import retrofit2.http.*
 
 interface ApiService {
@@ -26,15 +30,22 @@ interface ApiService {
     @GET("produk")
     suspend fun getAllProduk(): List<Produk>
 
-    @POST("produk")
+    @POST("produk/tambahProduk")
     suspend fun addProduk(@Body produk: Produk): Produk
 
     @DELETE("/produk/{id}")
     suspend fun deleteProduk(@Path("id") id: String)
 
-    @PUT("Produk/{id}")
+    @PUT("produk/{id}")
     suspend fun updateProduk(
         @Path("id") id: String,
         @Body produk: Produk
-    ): Produk
+    ): retrofit2.Response<Produk>
+
+    // input bahan pakai untuk produk
+    @POST("produk/{produkId}")
+    suspend fun addBahanPakai(
+        @Path("produkId") produkId: String,
+        @Body request: BahanPakaiRequest
+    )
 }

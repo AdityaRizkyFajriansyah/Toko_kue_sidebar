@@ -6,26 +6,20 @@ import java.math.BigDecimal
 data class Produk(
     val id: String? = null,
     val nama: String,
-
-    @SerializedName("jumlah")
-    val jumlah: BigDecimal = BigDecimal.ZERO,
-
-    @SerializedName("harga")
-    val harga: BigDecimal = BigDecimal.ZERO,
-
-    @SerializedName("totalHargaProduk")
-    val totalHargaProduk: BigDecimal = BigDecimal.ZERO,
-
-    @SerializedName("bahanBakuPakai")
-    val bahanBakuPakai: List<BahanPakai> = emptyList()
+    val jumlah: BigDecimal,
+    val harga: BigDecimal,
+    @SerializedName("totalHargaProduk")  // <── ubah ke nama field backend
+    val totalHargaProduk: BigDecimal,
+    val modal: BigDecimal? = BigDecimal.ZERO,
+    val bahanBakuPakai: List<Bahan>? = emptyList()
 )
 
-data class BahanPakai(
+
+data class BahanPakaiRequest(
     val id: String? = null,
     val produkId: String? = null,
     val bahanBakuId: String? = null,
     val bahanBakuNama: String? = null,
-
-    @SerializedName("bahanBakuPakai")
+    @SerializedName("jumlahDipakai")
     val jumlahDipakai: BigDecimal = BigDecimal.ZERO
 )
