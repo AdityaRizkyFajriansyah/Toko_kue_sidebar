@@ -1,5 +1,6 @@
 package com.example.toko_kue.screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,7 +42,11 @@ fun InputBahanProdukScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF33B0B2),
+                    titleContentColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -70,11 +75,8 @@ fun InputBahanProdukScreen(
                         bahan = bahan,
                         onTambah = { jumlahDipakai ->
                             val bahanPakai = BahanPakaiRequest(
-                                id = null,
-                                produkId = produkId,
                                 bahanBakuId = bahan.id ?: "",
-                                bahanBakuNama = bahan.nama,
-                                jumlahDipakai = jumlahDipakai
+                                bahanBakuPakai = jumlahDipakai
                             )
                             selectedBahan.add(bahanPakai)
                         }
@@ -89,6 +91,7 @@ fun InputBahanProdukScreen(
                     onClick = {
                         isSaving = true
                         selectedBahan.forEach {
+                            Log.d("InputBahanProduk", "Tambah bahan: produkId=$produkId, bahanId=${it.bahanBakuId}, jumlah=${it.bahanBakuPakai}")
                             produkViewModel.tambahBahanKeProduk(it)
                         }
                         isSaving = false

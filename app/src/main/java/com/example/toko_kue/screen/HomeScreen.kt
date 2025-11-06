@@ -4,6 +4,7 @@ import android.app.Dialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
@@ -33,8 +35,8 @@ fun HomeScreen(
     navController: NavController,
     bahanViewModel: BahanViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     produkViewModel: produkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onNavigateToDaftarBahan: () -> Unit = {},
-    onNavigateToInputProdukScreen: () -> Unit = {}
+    onNavigateToDaftarBahan: () -> Unit ,
+    onNavigateToInputProdukScreen: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -42,6 +44,7 @@ fun HomeScreen(
     val formatter = NumberFormat.getNumberInstance(Locale("in", "ID"))
 
     var showInputBahan by remember { mutableStateOf(false)}
+    var showInputProduk by remember { mutableStateOf(false) }
     var showSheet by remember { mutableStateOf(false) }
     var produkEdit by remember { mutableStateOf<Produk?>(null) }
 
@@ -73,11 +76,8 @@ fun HomeScreen(
 
                 Button(
                     onClick = {
-                        scope.launch {
-                            drawerState.close()
-                            kotlinx.coroutines.delay(250)
-                            onNavigateToInputProdukScreen()
-                        }
+                        showSheet = false
+                        showInputProduk = true
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -94,9 +94,14 @@ fun HomeScreen(
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFF33B0B2),
+                        titleContentColor = Color.White
+                    )
                 )
             },
+            
             floatingActionButton = {
                 FloatingActionButton(onClick = { showSheet = true }) {
                     Icon(Icons.Default.Add, contentDescription = "Tambah")
@@ -107,7 +112,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize()
-                    .background(Color(0xFFF5F5F5))
+                    .background(Color(0xFF8FD0CE))
             ) {
                 Text(
                     "Daftar Produk",
@@ -183,7 +188,7 @@ fun HomeScreen(
         ModalBottomSheet(
             onDismissRequest = { showSheet = false },
             sheetState = sheetState,
-            containerColor = Color.Red
+            containerColor = Color(0xFF8FD0CE)
         ) {
             Column(
                 modifier = Modifier
@@ -193,8 +198,12 @@ fun HomeScreen(
             ) {
                 Button(
                     onClick = {
-                        onNavigateToInputProdukScreen()
-                        showSheet = false
+                        scope.launch {
+                            showSheet = false
+                            kotlinx.coroutines.delay(100)
+                            showInputProduk = true
+                        }
+
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White)
@@ -215,6 +224,18 @@ fun HomeScreen(
             }
         }
 
+    }
+
+    if(showInputProduk){
+        InputProdukDialog(
+            onDismiss = { showInputProduk = false},
+            bahanViewModel = bahanViewModel,
+            produkViewModel = produkViewModel,
+            onNavigateToInputBahanProduk = { produkId ->
+                showInputProduk = false
+                navController.navigate("inputBahanProduk/$produkId")
+            }
+        )
     }
 
     if (showInputBahan) {
@@ -305,6 +326,105 @@ fun InputBahanDialog(
             }
         }
 
+    }
+}
+
+@Composable
+fun InputProdukDialog(
+    onDismiss: () -> Unit,
+    bahanViewModel: BahanViewModel,
+    produkViewModel: produkViewModel,
+    onNavigateToInputBahanProduk: (String) -> Unit
+){
+    var namaProduk by remember { mutableStateOf("")}
+    var hargaJual by remember { mutableStateOf("")}
+    var jumlahJadi by remember { mutableStateOf("")}
+
+    // state validasi
+    var namaError by remember { mutableStateOf(false)}
+    var hargaError by remember { mutableStateOf(false) }
+    var jumlahError by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false)}
+
+    Dialog(onDismissRequest = onDismiss){
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = Color(0xFFE0E0E0),
+            tonalElevation = 6.dp
+        ){
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ){
+                OutlinedTextField(
+                    value = namaProduk,
+                    onValueChange = {
+                        namaProduk = it
+                        namaError = it.isBlank()
+                    },
+                    label = { Text("Nama Produk") },
+                    isError = namaError,
+                    supportingText = {
+                        if (namaError) Text("Nama produk tidak boleh kosong", color = Color.Red)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = hargaJual,
+                    onValueChange = { input ->
+                        if(input.all  { it.isDigit() }) hargaJual = input
+                        hargaError = input.isBlank()
+                    },
+                    label = { Text("Harga jual per pcs") },
+                    isError = hargaError,
+                    supportingText = {
+                        if (hargaError) Text("Masukkan angka yang valid", color = Color.Red)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = jumlahJadi,
+                    onValueChange = {
+                        jumlahJadi = it
+
+                                    },
+                    label = { Text("Jumlah Jadi (pcs)")},
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Button(
+                    onClick = {
+                        val produkBaru = Produk(
+                            id = null,
+                            nama = namaProduk,
+                            jumlah = jumlahJadi.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                            harga = hargaJual.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                            totalHargaProduk = BigDecimal.ZERO
+                        )
+
+                        // Simpan produk lewat viewmodel
+                        produkViewModel.tambahProduk(
+                            produk = produkBaru,
+                            onSuccess = { newProdukId ->
+                                onDismiss()
+                                onNavigateToInputBahanProduk(newProdukId)
+                            }
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                ){
+                    Text("Simpan & Input Bahan", color = Color.White)
+                }
+            }
+        }
     }
 }
 

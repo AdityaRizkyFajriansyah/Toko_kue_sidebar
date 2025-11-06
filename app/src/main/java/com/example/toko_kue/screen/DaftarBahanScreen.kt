@@ -51,7 +51,11 @@ fun DaftarBahanScreen(
                     IconButton(onClick = { onBack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF33B0B2),
+                    titleContentColor = Color.White
+                )
             )
             },
             floatingActionButton = {
@@ -77,7 +81,7 @@ fun DaftarBahanScreen(
                     "Daftar Bahan Baku",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.White
                     ),
                     modifier = Modifier.padding(vertical = 16.dp)
                 )

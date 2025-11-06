@@ -70,4 +70,19 @@ class BahanViewModel : ViewModel() {
         }
     }
 
+    fun kurangiBahan(namaBahan: String, jumlahKurang: Double){
+        viewModelScope.launch {
+            try{
+                val bahan = _bahanList.value.find { it.nama.equals(namaBahan, ignoreCase = true) }
+                if(bahan != null){
+                    val newJumlah = bahan.jumlah.toDouble() - jumlahKurang
+                    val updated = bahan.copy(jumlah = BigDecimal.valueOf(newJumlah))
+                    updateBahan(updated)
+                }
+            } catch (e: Exception){
+                Log.e("BahnaViewModel", "Error kurangi bahan: ${e.message}")
+            }
+        }
+    }
+
 }

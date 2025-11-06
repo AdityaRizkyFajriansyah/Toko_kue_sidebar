@@ -40,15 +40,15 @@ class produkViewModel : ViewModel() {
     /**
      * Tambah produk baru (POST ke backend)
      */
-    fun tambahProduk(produk: Produk, onSuccess: (Produk)-> Unit = {}) {
+    fun tambahProduk(produk: Produk, onSuccess: (String) -> Unit = {}) {
         viewModelScope.launch {
             try {
-                val savedProduk = RetrofitClient.api.addProduk(produk)
-                fetchProduk() // refresh data dari server
-                Log.d("ProdukViewModel", "✅ Produk berhasil ditambahkan")
-                onSuccess(savedProduk)
+                val response: Produk = RetrofitClient.api.addProduk(produk)
+                val newId = response.id ?: ""      // ambil id produk dari response
+                fetchProduk()
+                onSuccess(newId)                   // kirim id ke callback
             } catch (e: Exception) {
-                Log.e("ProdukViewModel", "❌ Error tambah produk: ${e.message}", e)
+                Log.e("ProdukViewModel", "Error tambah produk: ${e.message}")
             }
         }
     }
@@ -91,21 +91,10 @@ class produkViewModel : ViewModel() {
     fun tambahBahanKeProduk(bahanPakai: BahanPakaiRequest) {
         viewModelScope.launch {
             try {
-                val request = BahanPakaiRequest(
-                    bahanBakuId = bahanPakai.bahanBakuId ?: "",
-                    jumlahDipakai = bahanPakai.jumlahDipakai
-                )
-
                 RetrofitClient.api.addBahanPakai(
                     produkId = bahanPakai.produkId ?: "",
-                    request = request
+                    request = bahanPakai
                 )
-
-                Log.d(
-                    "ProdukViewModel",
-                    "✅ Bahan ${bahanPakai.bahanBakuNama} ditambahkan ke produk ${bahanPakai.produkId}"
-                )
-
             } catch (e: Exception) {
                 Log.e("ProdukViewModel", "❌ Gagal tambah bahan ke produk: ${e.message}", e)
             }

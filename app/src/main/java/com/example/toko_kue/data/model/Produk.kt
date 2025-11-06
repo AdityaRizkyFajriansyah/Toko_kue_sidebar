@@ -16,10 +16,7 @@ data class Produk(
 
 
 data class BahanPakaiRequest(
-    val id: String? = null,
-    val produkId: String? = null,
-    val bahanBakuId: String? = null,
-    val bahanBakuNama: String? = null,
-    @SerializedName("jumlahDipakai")
-    val jumlahDipakai: BigDecimal = BigDecimal.ZERO
+    val bahanBakuId: String,
+    @SerializedName("bahanBakuPakai")
+    val bahanBakuPakai: BigDecimal
 )

@@ -43,7 +43,7 @@ interface ApiService {
     ): retrofit2.Response<Produk>
 
     // input bahan pakai untuk produk
-    @POST("produk/{produkId}")
+    @POST("produk/{produkId}/bahanBakuProduk")
     suspend fun addBahanPakai(
         @Path("produkId") produkId: String,
         @Body request: BahanPakaiRequest
