@@ -11,7 +11,8 @@ data class Produk(
     @SerializedName("totalHargaProduk")  // <── ubah ke nama field backend
     val totalHargaProduk: BigDecimal,
     val modal: BigDecimal? = BigDecimal.ZERO,
-    val bahanBakuPakai: List<Bahan>? = emptyList()
+    @SerializedName("bahanBakuPakai")
+    val bahanBakuPakai: List<BahanPakaiResponse>? = null
 )
 
 
@@ -19,4 +20,10 @@ data class BahanPakaiRequest(
     val bahanBakuId: String,
     @SerializedName("bahanBakuPakai")
     val bahanBakuPakai: BigDecimal
+)
+
+data class BahanPakaiResponse(
+    val bahanBakuId: String?,
+    val bahanBakuNama: String?,
+    val bahanBakuPakai: BigDecimal?
 )

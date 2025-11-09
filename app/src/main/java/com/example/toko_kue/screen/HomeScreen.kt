@@ -57,8 +57,17 @@ fun HomeScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+
         drawerContent = {
-            ModalDrawerSheet {
+            ModalDrawerSheet(drawerContainerColor = Color(0xFF8FD0CE)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF8FD0CE))
+                        .padding(16.dp)
+                ){
+                    Text("Toko Kue", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                }
                 Spacer(Modifier.height(16.dp))
                 Button(
                     onClick = {
@@ -82,8 +91,10 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
+                        .background(Color(0xFF33B0B2))
                 ) { Text("Input Produk") }
             }
+
         }
     ) {
         Scaffold(
@@ -160,6 +171,22 @@ fun HomeScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = Color.DarkGray
                                     )
+                                    produk.bahanBakuPakai?.let { bahanList ->
+                                        if(bahanList.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "Bahan yang dipakai: ",
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
+
+                                            bahanList.forEach { bahan ->
+                                                Text(
+                                                    text = "- ${bahan.bahanBakuNama ?: "-"} (${bahan.bahanBakuPakai ?: BigDecimal.ZERO})",
+                                                    style = MaterialTheme.typography.bodySmall
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
 
                                 Row {
@@ -391,37 +418,60 @@ fun InputProdukDialog(
 
                 OutlinedTextField(
                     value = jumlahJadi,
-                    onValueChange = {
-                        jumlahJadi = it
-
-                                    },
+                    onValueChange = { input ->
+                        if(input.all { it.isDigit()}) jumlahJadi = input
+                        jumlahError = input.isBlank()
+                    },
                     label = { Text("Jumlah Jadi (pcs)")},
-                    modifier = Modifier.fillMaxWidth()
+                    isError = jumlahError,
+                    supportingText = {
+                        if (jumlahError) Text("Masukkan angka yang valid", color = Color.Red)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
 
                 Button(
                     onClick = {
-                        val produkBaru = Produk(
-                            id = null,
-                            nama = namaProduk,
-                            jumlah = jumlahJadi.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-                            harga = hargaJual.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-                            totalHargaProduk = BigDecimal.ZERO
-                        )
+                        namaError = namaProduk.isBlank()
+                        hargaError = hargaJual.isBlank()
+                        jumlahError = jumlahJadi.isBlank()
+                        if(!namaError && !hargaError && !jumlahError){
+                            isLoading = true
 
-                        // Simpan produk lewat viewmodel
-                        produkViewModel.tambahProduk(
-                            produk = produkBaru,
-                            onSuccess = { newProdukId ->
-                                onDismiss()
-                                onNavigateToInputBahanProduk(newProdukId)
-                            }
-                        )
+                            val produkBaru = Produk(
+                                id = null,
+                                nama = namaProduk,
+                                jumlah = jumlahJadi.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                                harga = hargaJual.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                                totalHargaProduk = BigDecimal.ZERO
+                            )
+
+                            // Simpan produk lewat viewmodel
+                            produkViewModel.tambahProduk(
+                                produk = produkBaru,
+                                onSuccess = { newProdukId ->
+                                    onDismiss()
+
+                                    onNavigateToInputBahanProduk(newProdukId)
+                                }
+                            )
+                        }
                     },
+                    enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor =
+                            if(!namaError && !hargaError && !jumlahError)
+                            Color(0xFF4CAF50)
+                        else Color.Gray
+                    )
                 ){
-                    Text("Simpan & Input Bahan", color = Color.White)
+                    Text(
+                        if(isLoading) "Menyimpan..." else "Simpan",
+                        color = Color.White
+                    )
                 }
             }
         }

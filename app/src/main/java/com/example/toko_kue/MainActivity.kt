@@ -13,7 +13,7 @@ import androidx.navigation.navArgument
 import com.example.toko_kue.ui.theme.Toko_KueTheme
 import com.example.toko_kue.screen.HomeScreen
 import com.example.toko_kue.screen.DaftarBahanScreen
-import com.example.toko_kue.screen.InputBahanProdukScreen
+import com.example.toko_kue.screen.inputBahanProdukScreen
 import com.example.toko_kue.viewmodel.BahanViewModel
 import com.example.toko_kue.viewmodel.produkViewModel
 
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("inputProduk"){
-                        InputBahanProdukScreen(
+                        inputBahanProdukScreen(
                             produkId = "",
                             bahanViewModel = bahanViewModel,
                             navController = navController,
@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val produkId = backStackEntry.arguments?.getString("produkId")
                         produkId?.let {
-                            InputBahanProdukScreen(
+                            inputBahanProdukScreen(
                                 produkId = it,
                                 bahanViewModel = bahanViewModel,
                                 produkViewModel = produkViewModel,

@@ -87,16 +87,17 @@ class produkViewModel : ViewModel() {
         }
     }
 
-
-    fun tambahBahanKeProduk(bahanPakai: BahanPakaiRequest) {
+    fun tambahBahanKeProduk(produkId: String, request: BahanPakaiRequest) {
         viewModelScope.launch {
             try {
                 RetrofitClient.api.addBahanPakai(
-                    produkId = bahanPakai.produkId ?: "",
-                    request = bahanPakai
+                    produkId = produkId,
+                    request = request
                 )
+                Log.d("ProdukViewModel", "✅ Bahan ${request.bahanBakuId} ditambahkan ke produk $produkId")
             } catch (e: Exception) {
-                Log.e("ProdukViewModel", "❌ Gagal tambah bahan ke produk: ${e.message}", e)
+                Log.e("ProdukViewModel", "❌ Gagal tambah bahan: ${e.message}")
+                throw e
             }
         }
     }
