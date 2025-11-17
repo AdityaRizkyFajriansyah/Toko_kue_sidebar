@@ -66,7 +66,7 @@ fun HomeScreen(
                         .background(Color(0xFF8FD0CE))
                         .padding(16.dp)
                 ){
-                    Text("Toko Kue", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                    Text("Toko Kue", color = Color.Black, style = MaterialTheme.typography.titleLarge)
                 }
                 Spacer(Modifier.height(16.dp))
                 Button(
@@ -94,7 +94,6 @@ fun HomeScreen(
                         .background(Color(0xFF33B0B2))
                 ) { Text("Input Produk") }
             }
-
         }
     ) {
         Scaffold(
@@ -108,7 +107,7 @@ fun HomeScreen(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color(0xFF33B0B2),
-                        titleContentColor = Color.White
+                        titleContentColor = Color.Black
                     )
                 )
             },
@@ -182,7 +181,7 @@ fun HomeScreen(
                                             bahanList.forEach { bahan ->
                                                 Text(
                                                     text = "- ${bahan.bahanBakuNama ?: "-"} (${bahan.bahanBakuPakai ?: BigDecimal.ZERO})",
-                                                    style = MaterialTheme.typography.bodySmall
+                                                    style = MaterialTheme.typography.bodyLarge
                                                 )
                                             }
                                         }

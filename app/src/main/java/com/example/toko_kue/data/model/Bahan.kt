@@ -18,3 +18,14 @@ data class Bahan(
     @SerializedName("hargaDetail")
     val hargaDetail: Double? = null
 )
+
+data class UpdateBahanRequest(
+    val nama: String,
+    val jumlah: Double,
+    val harga: Double
+)
+
+data class TambahStokRequest(
+    val jumlah: Double,
+    val harga: Double
+)

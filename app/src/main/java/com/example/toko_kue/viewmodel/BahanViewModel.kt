@@ -8,24 +8,30 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
+import com.example.toko_kue.data.model.TambahStokRequest
+import com.example.toko_kue.data.model.UpdateBahanRequest
 import java.math.BigDecimal
+
 
 class BahanViewModel : ViewModel() {
 
     private val _bahanList = MutableStateFlow<List<Bahan>>(emptyList())
     val bahanList = _bahanList.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
     private val api = RetrofitClient.api
-
     fun fetchBahan() {
         viewModelScope.launch {
-            Log.d("BahanViewModel", "🔹 Memulai fetch bahan...")
+            _isRefreshing.value = true
             try {
                 val data = api.getAllBahan()
-                Log.d("BahanViewModel", "✅ Berhasil ambil ${data.size} data dari server")
                 _bahanList.value = data
-            } catch (e: Exception) {
-                Log.e("BahanViewModel", "❌ Gagal ambil bahan: ${e.message}", e)
+            }catch(e: Exception){
+                Log.e("BahanViewModel", "Error fetch bahan: ${e.message}")
+            }
+            finally {
+                _isRefreshing.value = false
             }
         }
     }
@@ -59,30 +65,57 @@ class BahanViewModel : ViewModel() {
         }
     }
 
-    fun updateBahan(bahan: Bahan) {
+//    fun kurangiBahan(namaBahan: String, jumlahKurang: Double){
+//        viewModelScope.launch {
+//            try{
+//                val bahan = _bahanList.value.find { it.nama.equals(namaBahan, ignoreCase = true) }
+//                if(bahan != null){
+//                    val newJumlah = bahan.jumlah.toDouble() - jumlahKurang
+//                    val updated = bahan.copy(jumlah = BigDecimal.valueOf(newJumlah))
+//                    updateBahan(updated)
+//                }
+//            } catch (e: Exception){
+//                Log.e("BahnaViewModel", "Error kurangi bahan: ${e.message}")
+//            }
+//        }
+//    }
+
+    fun tambahStok(id: String, jumlahTambah: Double, hargaBaru: Double) {
         viewModelScope.launch {
             try {
-                api.updateBahan(bahan.id!!, bahan)
+                val body = TambahStokRequest(
+                    jumlah = jumlahTambah,
+                    harga = hargaBaru
+                )
+
+                api.tambahStok(id, body)
                 fetchBahan()
+
             } catch (e: Exception) {
-                Log.e("BahanViewModel", "Error update bahan: ${e.message}")
+                Log.e("BahanViewModel", "Error tambah stok: ${e.message}")
             }
         }
     }
 
-    fun kurangiBahan(namaBahan: String, jumlahKurang: Double){
+    fun editBahan(bahan: Bahan) {
         viewModelScope.launch {
-            try{
-                val bahan = _bahanList.value.find { it.nama.equals(namaBahan, ignoreCase = true) }
-                if(bahan != null){
-                    val newJumlah = bahan.jumlah.toDouble() - jumlahKurang
-                    val updated = bahan.copy(jumlah = BigDecimal.valueOf(newJumlah))
-                    updateBahan(updated)
-                }
-            } catch (e: Exception){
-                Log.e("BahnaViewModel", "Error kurangi bahan: ${e.message}")
+            try {
+                val body = UpdateBahanRequest(
+                    nama = bahan.nama,
+                    jumlah = bahan.jumlah.toDouble(),
+                    harga = bahan.harga.toDouble()
+                )
+
+                api.editBahan(bahan.id!!, body)
+                fetchBahan()
+
+            } catch (e: Exception) {
+                Log.e("BahanViewModel", "Error edit bahan: ${e.message}")
             }
         }
     }
+
+
+
 
 }

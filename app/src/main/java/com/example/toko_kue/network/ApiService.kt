@@ -3,6 +3,8 @@ package com.example.toko_kue.network
 import com.example.toko_kue.data.model.Bahan
 import com.example.toko_kue.data.model.BahanPakaiRequest
 import com.example.toko_kue.data.model.Produk
+import com.example.toko_kue.data.model.TambahStokRequest
+import com.example.toko_kue.data.model.UpdateBahanRequest
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
@@ -11,26 +13,35 @@ import retrofit2.http.*
 interface ApiService {
 
     // ===== BAHAN =====
-    @GET("/bahanBaku")
+    @GET("bahanBaku")
     suspend fun getAllBahan(): List<Bahan>
 
-    @POST("bahanBaku/stok-baru")
+    @POST("bahanBaku")
     suspend fun addBahan(@Body bahan: Bahan): Bahan
 
     @DELETE("bahanBaku/{id}")
     suspend fun deleteBahan(@Path("id") id: String)
 
+    // edit typo
     @PUT("bahanBaku/{id}")
-    suspend fun updateBahan(
+    suspend fun editBahan(
         @Path("id") id: String,
-        @Body bahan: Bahan
-    ): Bahan
+        @Body body: UpdateBahanRequest
+    )
+
+    // tambah stok
+    @PUT("bahanBaku/tambah-stok/{id}")
+    suspend fun tambahStok(
+        @Path("id") id:String,
+        @Body body: TambahStokRequest
+    )
+
 
     // ===== PRODUK =====
     @GET("produk")
     suspend fun getAllProduk(): List<Produk>
 
-    @POST("produk/tambahProduk")
+    @POST("produk")
     suspend fun addProduk(@Body produk: Produk): Produk
 
     @DELETE("/produk/{id}")
@@ -43,7 +54,7 @@ interface ApiService {
     ): retrofit2.Response<Produk>
 
     // input bahan pakai untuk produk
-    @POST("produk/{produkId}/bahanBakuProduk")
+    @POST("produk/{produkId}")
     suspend fun addBahanPakai(
         @Path("produkId") produkId: String,
         @Body request: BahanPakaiRequest

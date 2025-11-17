@@ -3,6 +3,7 @@ package com.example.toko_kue.screen
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -22,6 +23,9 @@ import java.math.BigDecimal
 import com.example.toko_kue.viewmodel.BahanViewModel
 import com.example.toko_kue.data.model.Bahan
 import com.example.toko_kue.screen.InputBahanDialog
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +36,7 @@ fun DaftarBahanScreen(
     // Ambil data dari ViewModel (diambil dari Retrofit)
     val bahanList by bahanViewModel.bahanList.collectAsState()
 
+    var showTambahStokDialog by remember { mutableStateOf(false)}
     // Jalankan GET ke API saat screen dibuka
     LaunchedEffect(Unit) {
         bahanViewModel.fetchBahan()
@@ -42,6 +47,8 @@ fun DaftarBahanScreen(
     var selectedBahan by remember { mutableStateOf<Bahan?>(null) }
 
     var showInputBahan by remember { mutableStateOf(false)}
+
+    val isRefreshing by bahanViewModel.isRefreshing.collectAsState()
 
     Scaffold(
         topBar = {
@@ -69,6 +76,10 @@ fun DaftarBahanScreen(
                 }
             }
         ) { padding ->
+        SwipeRefresh(
+            state = rememberSwipeRefreshState(isRefreshing),
+            onRefresh = { bahanViewModel.fetchBahan() }
+        ) {
             Column(
                 modifier = Modifier
                     .padding(padding)
@@ -111,10 +122,22 @@ fun DaftarBahanScreen(
                                         )
                                     )
                                     Text("Stok: ${bahan.jumlah} gr/ml", color = Color.DarkGray)
+                                    Text(
+                                        "Sisa stok: ${bahan.sisaBahan ?: 0.0} gr/ml"
+                                    )
                                     Text("Harga: Rp${bahan.harga}", color = Color.DarkGray)
                                 }
 
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                    IconButton(onClick = {
+                                        selectedBahan = bahan
+                                        showTambahStokDialog = true
+                                    }) {
+                                        Icon(Icons.Default.Add, contentDescription = "Tambah Stok & Harga", tint = Color(0xFF3366CC))
+                                    }
+
+                                    // Icon Edit bahan
                                     IconButton(onClick = {
                                         selectedBahan = bahan
                                         showEditDialog = true
@@ -125,6 +148,8 @@ fun DaftarBahanScreen(
                                             tint = Color(0xFF00796B)
                                         )
                                     }
+
+                                    // Icon Delete bahan
                                     IconButton(onClick = {
                                         bahan.id?.let { bahanViewModel.hapusBahan(it) }
                                     }) {
@@ -141,6 +166,24 @@ fun DaftarBahanScreen(
                 }
             }
         }
+    }
+    // dialog tambah stok
+    if(showTambahStokDialog && selectedBahan != null){
+        TambahStokDialog(
+            bahan = selectedBahan!!,
+            onDismiss = { showTambahStokDialog = false },
+            onSave = { jumlahTambah, hargaBaru ->
+                bahanViewModel.tambahStok(
+                    selectedBahan!!.id!!,
+                    jumlahTambah,
+                    hargaBaru
+                )
+                showTambahStokDialog = false
+            }
+        )
+    }
+
+    // input bahan dialog
     if (showInputBahan) {
         InputBahanDialog(
             onDismiss = { showInputBahan = false },
@@ -161,7 +204,7 @@ fun DaftarBahanScreen(
             bahan = selectedBahan!!,
             onDismiss = { showEditDialog = false },
             onSave = { updated ->
-                bahanViewModel.updateBahan(updated)
+                bahanViewModel.editBahan(updated)
                 showEditDialog = false
             }
         )
@@ -200,6 +243,50 @@ fun EditBahanDialog(
                         harga = harga.toBigDecimalOrNull() ?: BigDecimal.ZERO
                     )
                 )
+            }) {
+                Text("Simpan")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Batal") }
+        }
+    )
+}
+
+
+@Composable
+fun TambahStokDialog(
+    bahan: Bahan,
+    onDismiss: () -> Unit,
+    onSave: (Double, Double) -> Unit
+){
+    var jumlahinput by remember { mutableStateOf("")}
+    var hargaInput by remember { mutableStateOf("")}
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Tambah Stok untuk ${bahan.nama}") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = jumlahinput,
+                    onValueChange = { jumlahinput = it },
+                    label = { Text("Jumlah Stok (gr/ml)")},
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = hargaInput,
+                    onValueChange = { hargaInput = it },
+                    label = { Text("Harga")},
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                val jumlah = jumlahinput.toDoubleOrNull() ?: 0.0
+                val harga = hargaInput.toDoubleOrNull() ?: 0.0
+                onSave(jumlah, harga)
             }) {
                 Text("Simpan")
             }
